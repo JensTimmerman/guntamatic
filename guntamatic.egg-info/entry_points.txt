@@ -1,0 +1,2 @@
+[console_scripts]
+guntamatic = guntamatic.heater:main
