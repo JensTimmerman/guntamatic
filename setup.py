@@ -20,7 +20,7 @@ setup(
     description="module to get data from a Guntamatic heater e.g. BMK 20",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://gitea.caret.be/jens/guntamatic",
+    url="https://github.com/JensTimmerman/guntamatic",
     author="Jens Timmerman",
     author_email="guntamatic@caret.be",
     license="Apache License 2.0",
