@@ -1,4 +1,4 @@
-This python module allows you to contact your Guntamatic BMK heater and get operational status informatio
+This python module allows you to contact your Guntamatic BMK heater and get operational status information
 It includes an example binary 'heater.py' which can be installed as the guntamatic binary to instantly get data in your cli.
 The Guntamatic class can be used by IOT frameworks to be called regularly and plot data and the like.
 
