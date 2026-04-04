@@ -41,6 +41,11 @@ jobs:
         with:
           python-version: "3.14"
 
+      - name: Update version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          sed -i "s/version=.*/version='$VERSION',/" setup.py
+
       - name: Build
         run: |
           pip install build
