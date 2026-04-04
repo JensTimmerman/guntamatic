@@ -4,12 +4,19 @@ The Guntamatic class can be used by IOT frameworks to be called regularly and pl
 
 The exact outputs might depend on your model and firmware.
 
+
 ## release history
 1.0.1: don't generate an empty sensor as last line, skip empty lines
+1.0.2: update homepage
+1.0.3: clean up repo
 
 ## tests
 PYTHONPATH=. pytest tests/test_heater.py
 
+## roadmap
+Currently this library only uses daqdata.cgi and dacdesc.cgi
+There is also a status.cgi json interface, and probably a lot more is possible when you have an api key (https://github.com/openhab/openhab-addons/tree/main/bundles/org.openhab.binding.guntamatic )
+To be added in the future.
 
 ## Example Data
 
