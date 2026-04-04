@@ -1,7 +1,7 @@
 from setuptools import setup
 from setuptools import find_packages
 
-version = "1.0.0"
+version = "1.0.1"
 
 install_requires = [
     "requests",
@@ -35,7 +35,6 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Topic :: Internet :: WWW/HTTP",
-        "Topic :: IOT",
     ],
     packages=find_packages(),
     include_package_data=True,

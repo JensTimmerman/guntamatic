@@ -41,6 +41,9 @@ class Heater(object):
             if RESERVED in description:
                 continue
             key, *unit = description.split(';')
+            # skip empty lines
+            if not key:
+                continue
             unit = ''.join(unit)
 
             returndata[key] = [datum, unit]
@@ -56,11 +59,9 @@ def main():
         verbose = True
         logging.basicConfig(level=logging.INFO)
 
-    if '-vv' in sys.argv:
+    if '-vv' in sys.argv or '--verbose' in sys.argv:
         verbose = True
         logging.basicConfig(level=logging.DEBUG)
-
-
 
     VERBOSE = ['Program', 'DHW', '0', '3', '4', '5', '6', '7', '8', 'extra', 'Interuption', 'Serial', 'Auxiliary',
                'Top ', 'Btm ', 'Version', 'Suction', 'air']
@@ -78,6 +79,7 @@ def main():
                 cont = True
         if not cont:
             print(key + ' ' + str(values[0]) + str(values[1]))
+
 
 if __name__ == '__main__':
     main()
