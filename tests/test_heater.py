@@ -13,7 +13,7 @@ def heater() -> Heater:
     return Heater("1.1.1.1")
 
 
-def mock_get(url: str) -> MagicMock:
+def mock_get(url: str, **kwargs) -> MagicMock:
     """Return mock response based on URL."""
     mock = MagicMock()
     if "daqdesc" in url:
