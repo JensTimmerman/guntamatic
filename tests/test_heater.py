@@ -1,7 +1,7 @@
 """Tests for the Guntamatic heater module."""
 from unittest.mock import MagicMock, patch
 import pytest
-from guntamatic.heater import Heater
+from guntamatic.heater import Heater, NoSerialException
 
 MOCK_DESC = "Boiler temperature;°C\nOutside Temp.;°C\nreserved;°C\nProgram;\n;\n"
 MOCK_DATA = "14.09\n15.95\n0\nHEAT\n\n"
@@ -22,6 +22,15 @@ def mock_get(url: str, **kwargs) -> MagicMock:
         mock.text = MOCK_DATA
     return mock
 
+def mock_bad_get(url: str, **kwargs) -> MagicMock:
+    """Return mock response based on URL."""
+    mock = MagicMock()
+    if "daqdesc" in url:
+        mock.text =  MOCK_DESC = "Boiler temperature;°C\nOutside Temp.;°C\nreserved;°C\nFooBar;\n"
+    else:
+        mock.text = MOCK_DATA
+    return mock
+
 
 @patch("guntamatic.heater.requests.get", side_effect=mock_get)
 def test_get_data(mock_requests, heater: Heater) -> None:
@@ -32,6 +41,16 @@ def test_get_data(mock_requests, heater: Heater) -> None:
         "Outside Temp.": ["15.95", "°C"],
         "Program": ["HEAT", ""],
     }
+
+@patch("guntamatic.heater.requests.get", side_effect=mock_get)
+def test_noserial_parse_data(mock_requests, heater: Heater) -> None:
+    """Test parse_data raises exception when no serial present."""
+    try:
+        data = heater.parse_data()
+    except NoSerialException:
+        pass
+    else:
+        assert False, "No serial was present but NoSerialException was not raised"
 
 
 @patch("guntamatic.heater.requests.get", side_effect=mock_get)

@@ -13,6 +13,7 @@ DESCURL = 'daqdesc.cgi'
 DATAURL = 'daqdata.cgi'
 
 RESERVED = 'reserved'
+SERIAL = 'Serial'
 
 # List of sensors we want to always give
 SENSORS = [
@@ -27,7 +28,7 @@ SENSORS = [
     "Room Temp:HC 1",
     "Room Temp:HC 2",
     "Program",
-    "Serial",
+    SERIAL,
     "Version",
 ]
 
@@ -107,10 +108,21 @@ TRANSLATE = {
     "Room Temp:HC 1": "Room 1 Temperature",
     "Room Temp:HC 2": "Room 2 Temperature",
     "Program": "Program",
-    "Serial": "Serial",
+    SERIAL: SERIAL,
     "Version": "Version",
 }
 
+
+class UnexpectedDataEncounteredException(Exception):
+    """
+    Raised when unexpected data is encountered
+    This should not happen, please open a bug against guntamatic library on pypi
+    """
+
+class NoSerialException(Exception):
+    """
+    Raised when no serial was present in the data
+    """
 
 class Heater():
     """This class represents a heater"""
@@ -163,7 +175,12 @@ class Heater():
         out = {}
         for key, values in data.items():
             if key in SENSORS:
-                out[TRANSLATE[key]] = values
+                try:
+                    out[TRANSLATE[key]] = values
+                except KeyError:
+                    raise UnexpectedDataEncounteredException
+        if SERIAL not in out:
+            raise NoSerialException
         return out
 
 def main():
