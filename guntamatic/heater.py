@@ -105,7 +105,7 @@ TRANSLATE = {
     "Buffer Btm": "Buffer Bottom Temperature",
     "DHW 0": "Domestic Home Water Temperature",
     "Room Temp:HC 1": "Room 1 Temperature",
-    "Room Temp:HC 2": "Room 2 Temeprature",
+    "Room Temp:HC 2": "Room 2 Temperature",
     "Program": "Program",
     "Serial": "Serial",
     "Version": "Version",
