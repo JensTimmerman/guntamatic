@@ -9,6 +9,7 @@ The exact outputs might depend on your model and firmware.
 1.0.1: don't generate an empty sensor as last line, skip empty lines
 1.0.2: update homepage
 1.0.3: clean up repo
+1.1.0: Add a parse_data function that does translations and skips diagnostic values. We now only return relevant values that have a hardcoded description.
 
 ## tests
 PYTHONPATH=. pytest tests/test_heater.py
@@ -17,6 +18,15 @@ PYTHONPATH=. pytest tests/test_heater.py
 Currently this library only uses daqdata.cgi and dacdesc.cgi
 There is also a status.cgi json interface, and probably a lot more is possible when you have an api key (https://github.com/openhab/openhab-addons/tree/main/bundles/org.openhab.binding.guntamatic )
 To be added in the future.
+
+par.cgi returns a full list of internal parameters
+
+?key=$KEY parameter should give you more options according to rumors
+You can get the key for your boiler from guntamatic tech Support.
+
+ext/daqdesc.cgi?key=<key> should give this in json format according to rummors.
+https://github.com/wolfgangr/guntaPERL
+
 
 ## Example Data
 
