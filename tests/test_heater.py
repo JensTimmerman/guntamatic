@@ -22,11 +22,11 @@ def mock_get(url: str, **kwargs) -> MagicMock:
         mock.text = MOCK_DATA
     return mock
 
-def mock_bad_get(url: str, **kwargs) -> MagicMock:
+def mock_serial_get(url: str, **kwargs) -> MagicMock:
     """Return mock response based on URL."""
     mock = MagicMock()
     if "daqdesc" in url:
-        mock.text =  MOCK_DESC = "Boiler temperature;°C\nOutside Temp.;°C\nreserved;°C\nFooBar;\n"
+        mock.text =  MOCK_DESC = "Serial\n;Versin\nreserved;°C\nFooBar;\n"
     else:
         mock.text = MOCK_DATA
     return mock
@@ -51,6 +51,12 @@ def test_noserial_parse_data(mock_requests, heater: Heater) -> None:
         pass
     else:
         assert False, "No serial was present but NoSerialException was not raised"
+
+@patch("guntamatic.heater.requests.get", side_effect=mock_serial_get)
+def test_version_in_parsedata(mock_requests, heater: Heater) -> None:
+    """Test parse_data raises exception when no serial present."""
+    data = heater.parse_data()
+    assert 'Version' in data
 
 
 @patch("guntamatic.heater.requests.get", side_effect=mock_get)

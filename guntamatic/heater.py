@@ -173,13 +173,12 @@ class Heater():
         """
         data = self.get_data()
         out = {}
-        for key, values in data.items():
-            if key in SENSORS:
-                try:
-                    out[TRANSLATE[key]] = values
-                except KeyError:
-                    raise UnexpectedDataEncounteredException
-        if SERIAL not in out:
+        for key in SENSORS:
+            try:
+                out[TRANSLATE[key]] = data.get(key, None)
+            except KeyError:
+                raise UnexpectedDataEncounteredException
+        if SERIAL not in out or not out[SERIAL]:
             raise NoSerialException
         return out
 

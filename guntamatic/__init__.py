@@ -1,1 +1,2 @@
-# intentionally left empty
+
+from guntamatic.heater import Heater, NoSerialException

@@ -11,6 +11,7 @@ The exact outputs might depend on your model and firmware.
 1.0.3: clean up repo
 1.1.0: Add a parse_data function that does translations and skips diagnostic values. We now only return relevant values that have a hardcoded description.
 1.2.0: Raise an exception in parse_data if no Serial was present
+1.3.0: Always return all default sensors, even if they have None as value
 
 ## tests
 PYTHONPATH=. pytest tests/test_heater.py
