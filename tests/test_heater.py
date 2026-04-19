@@ -56,7 +56,7 @@ def test_noserial_parse_data(mock_requests, heater: Heater) -> None:
 def test_version_in_parsedata(mock_requests, heater: Heater) -> None:
     """Test parse_data raises exception when no serial present."""
     data = heater.parse_data()
-    assert 'Version' in data
+    assert 'version' in data
 
 
 @patch("guntamatic.heater.requests.get", side_effect=mock_get)
