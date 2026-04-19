@@ -26,7 +26,7 @@ def mock_serial_get(url: str, **kwargs) -> MagicMock:
     """Return mock response based on URL."""
     mock = MagicMock()
     if "daqdesc" in url:
-        mock.text =  MOCK_DESC = "Serial\n;Versin\nreserved;°C\nFooBar;\n"
+        mock.text = "Serial;\nOutside Temp.;°C\nreserved;°C\nProgram;\n;\n"
     else:
         mock.text = MOCK_DATA
     return mock
@@ -40,6 +40,28 @@ def test_get_data(mock_requests, heater: Heater) -> None:
         "Boiler temperature": ["14.09", "°C"],
         "Outside Temp.": ["15.95", "°C"],
         "Program": ["HEAT", ""],
+    }
+
+@patch("guntamatic.heater.requests.get", side_effect=mock_serial_get)
+def test_get_data(mock_requests, heater: Heater) -> None:
+    """Test get_data returns correct structure and translation."""
+    data = heater.parse_data()
+    print(data)
+    assert data == {
+        'status': None,
+        'boiler_temperature': None,
+        'outdoor_temperature': ['15.95', '°C'],
+        'buffer_load': None,
+        'buffer_top_temperature': None,
+        'buffer_center_temperature': None,
+        'buffer_bottom_temperature': None,
+        'domestic_home_water_temperature': None,
+        'room_0_temperature': None,
+        'room_1_temperature': None,
+        'room_2_temperature': None,
+        'program': ['heat', ''],
+        'serial':  ['14.09', ''],
+        'version': None,
     }
 
 @patch("guntamatic.heater.requests.get", side_effect=mock_get)
