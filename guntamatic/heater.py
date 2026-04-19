@@ -97,10 +97,11 @@ DIAGNOSTIC_SENSORS = [
 ]
 
 TRANSLATE = {
+    #TODO: add translatiosn for all languages, not just English
     "Running": "status",
     "Boiler temperature": "boiler_temperature",
     "Outside Temp.": "outdoor_temperature",
-    "Buffer load.": "buffer_road",
+    "Buffer load.": "buffer_load",
     "Buffer Top": "buffer_top_temperature",
     "Buffer Mid": "buffer_center_temperature",
     "Buffer Btm": "buffer_bottom_temperature",
@@ -111,6 +112,13 @@ TRANSLATE = {
     "Program": "program",
     SERIAL: "serial",
     "Version": "version",
+    "OFF": "off",
+    "TIMER": "timer",
+    "DHW": "dhw",
+    "HEAT": "heat",
+    "HIBERNAT": "hibernate",
+    "HIBERNATE TO": "hibernate_to",
+    "DHW BOOST": "dhw_boost",
 }
 
 
@@ -177,13 +185,18 @@ class Heater():
         for key in SENSORS:
             try:
                 out[TRANSLATE[key]] = data.get(key, None)
-            except KeyError:
-                raise UnexpectedDataEncounteredException
+            except KeyError as exc:
+                raise UnexpectedDataEncounteredException from exc
         if 'serial' not in out or not out['serial']:
             raise NoSerialException
+        # Translate values as wel for known enums
+        if 'program' in out:
+            out['program'][0] = TRANSLATE[out['program'][0]]
         return out
 
+
 def main():
+    """Main library entrypoint"""
     verbose = False
     if len(sys.argv) < 2:
         print("usage: ", sys.argv[0] + ' hostname')
