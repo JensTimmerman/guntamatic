@@ -25,6 +25,7 @@ SENSORS = [
     "Buffer Mid",
     "Buffer Btm",
     "DHW 0",
+    "Room Temp:HC 0",
     "Room Temp:HC 1",
     "Room Temp:HC 2",
     "Program",
@@ -45,7 +46,6 @@ DIAGNOSTIC_SENSORS = [
     "DHW Pump 2",
     "Heating circulation pump 0",
     "Flow is 0",
-    "Room Temp:HC 0",
     "Flow is 1",
     "Heating circulation pump 1",
     "Flow is 2",
@@ -97,19 +97,20 @@ DIAGNOSTIC_SENSORS = [
 ]
 
 TRANSLATE = {
-    "Running": "Status",
-    "Boiler temperature": "Boiler Temperature",
-    "Outside Temp.": "Outdoor Temperature",
-    "Buffer load.": "Buffer Load",
-    "Buffer Top": "Buffer Top Temperature",
-    "Buffer Mid": "Buffer Center Temperature",
-    "Buffer Btm": "Buffer Bottom Temperature",
-    "DHW 0": "Domestic Home Water Temperature",
-    "Room Temp:HC 1": "Room 1 Temperature",
-    "Room Temp:HC 2": "Room 2 Temperature",
-    "Program": "Program",
-    SERIAL: SERIAL,
-    "Version": "Version",
+    "Running": "status",
+    "Boiler temperature": "boiler_temperature",
+    "Outside Temp.": "outdoor_temperature",
+    "Buffer load.": "buffer_road",
+    "Buffer Top": "buffer_top_temperature",
+    "Buffer Mid": "buffer_center_temperature",
+    "Buffer Btm": "buffer_bottom_temperature",
+    "DHW 0": "domestic_home_water_temperature",
+    "Room Temp:HC 0": "room_0_temperature",
+    "Room Temp:HC 1": "room_1_temperature",
+    "Room Temp:HC 2": "room_2_temperature",
+    "Program": "program",
+    SERIAL: "serial",
+    "Version": "version",
 }
 
 
@@ -178,7 +179,7 @@ class Heater():
                 out[TRANSLATE[key]] = data.get(key, None)
             except KeyError:
                 raise UnexpectedDataEncounteredException
-        if SERIAL not in out or not out[SERIAL]:
+        if 'serial' not in out or not out['serial']:
             raise NoSerialException
         return out
 
