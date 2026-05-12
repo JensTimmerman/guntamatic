@@ -23,11 +23,11 @@ setup(
     url="https://github.com/JensTimmerman/guntamatic",
     author="Jens Timmerman",
     author_email="guntamatic@caret.be",
-    license="Apache License 2.0",
+    license="GPLv3",
     python_requires=">=3.7",
     classifiers=[
         "Development Status :: 3 - Alpha",
-        "License :: OSI Approved :: Apache Software License",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
