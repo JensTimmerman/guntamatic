@@ -15,6 +15,7 @@ The exact outputs might depend on your model and firmware.
 - 1.4.0: Translate to snake_case; Home Assistant prefers this, they are easier to split if you need to migrate.
 - 1.5.0: Translate known values to snake_case as well
 - 1.6.0: Add more sensors to get_data, rename domestic home water to domestic hot water
+- 1.7.0: Added support for devices in german, french, italian and spanish with mapping to fixed english output, removed supurflious print
 
 ## tests
 PYTHONPATH=. pytest tests/test_heater.py
