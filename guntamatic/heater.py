@@ -862,6 +862,7 @@ class Heater():
             if 'temp' in key and (out[key] ==  ["60.00", "\u00b0C"]
                                   or out[key] ==  ["-20.00", "\u00b0C"]
                                   or out[key] == ["43.00", "\u00b0C"]
+                                  or out[key] == ["44.00", "\u00b0C"]
                                   or out[key] ==  ["-9.00", "\u00b0C"]):
                 if 'circuit' in key:
                     circuit_nr = key[8]
