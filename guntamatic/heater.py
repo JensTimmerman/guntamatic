@@ -15,45 +15,6 @@ DATAURL = 'daqdata.cgi'
 RESERVED = ['reserved', 'reservado', 'réservé', 'gereserveerd']
 SERIAL = 'Serial'
 
-DIAGNOSTIC_SENSORS = [
-    "Interuption 1",
-    "Operat. time",
-    "Service Hrs",
-    "extra-WW. 1",
-    "extra-WW. 2",
-    "B extra-WW. 0",
-    "B extra-WW. 1",
-    "B extra-WW. 2",
-    "Buffer Top 0",
-    "Buffer Btm 0",
-    "Buffer Top 1",
-    "Buffer Btm 1",
-    "Buffer Top 2",
-    "Buffer Btm 2",
-    "Auxiliary pump 0",
-    "Auxiliary pump 1",
-    "Auxiliary pump 2",
-    # german
-    "Störung 1"
-    "Störung 2"
-    "Betriebsstunden"
-    "Servicezeit"
-    "Zusatzwarmw. 1"
-    "Zusatzwarmw. 2"
-    "P Zusatzwarmw. 0"
-    "P Zusatzwarmw. 1"
-    "P Zusatzwarmw. 3"
-    "Puffer oben 0"
-    "Puffer unten 0"
-    "Puffer oben 1"
-    "Puffer unten 1"
-    "Puffer oben 2"
-    "Puffer unten 2"
-    "Fernpumpe 0"
-    "Fernpumpe 1"
-    "Fernpumpe 2"
-]
-
 TRANSLATE = {
     #TODO: add translations for all languages, not just English and german
     "Running": "status",
@@ -866,13 +827,13 @@ class Heater():
                                   or out[key] ==  ["-9.00", "\u00b0C"]):
                 if 'circuit' in key:
                     circuit_nr = key[8]
-                    del out[f'heating_circulation_pump_{circuit_nr}']
-                    del out[f'heating_circulation_program_{circuit_nr}']
+                    out.pop(f'heating_circulation_pump_{circuit_nr}', None)
+                    out.pop(f'heating_circulation_program_{circuit_nr}', None)
                 if 'domestic_hot_water' in key:
                     dhw_nr = key[19]
-                    del out[f'dhw_pump_{dhw_nr}']
-                    del out[f'extra_dhw_boost_{dhw_nr}']
-                del out[key]
+                    out.pop(f'dhw_pump_{dhw_nr}', None)
+                    out.pip(f'extra_dhw_boost_{dhw_nr}', None)
+                out.pop(key, None)
         if 'serial' not in out or not out['serial']:
             raise NoSerialException
         # Translate values as wel for known enums

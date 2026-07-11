@@ -1,7 +1,7 @@
 from setuptools import setup
 from setuptools import find_packages
 
-version = "1.9.0"
+version = "1.9.1"
 
 install_requires = [
     "requests",
