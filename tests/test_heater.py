@@ -90,3 +90,21 @@ def test_heater_init(heater: Heater) -> None:
     assert heater.protocol == "http://"
     assert heater.descurl == "daqdesc.cgi"
     assert heater.dataurl == "daqdata.cgi"
+
+def test_missing_dhw_pump_when_dhw_temp_60(heater: Heater) -> None:
+    """Test that missing dhw_pump_1 doesn't give issues when dhw 1 is the default 60 degrees"""
+    mock_desc = "Serial;\nDHW 1;°C\nDHW Pump 0;%\n"
+    mock_data = "a\n60.00\n0\n"
+
+    def mock_get(url: str, **kwargs) -> MagicMock:
+        mock = MagicMock()
+        if "daqdesc" in url:
+            mock.text = mock_desc
+        else:
+            mock.text = mock_data
+        return mock
+
+    with patch("guntamatic.heater.requests.get", side_effect=mock_get):
+        data = heater.parse_data()
+
+    assert "dhw_pump_1" not in data

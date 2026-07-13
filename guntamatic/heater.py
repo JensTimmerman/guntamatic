@@ -832,7 +832,7 @@ class Heater():
                 if 'domestic_hot_water' in key:
                     dhw_nr = key[19]
                     out.pop(f'dhw_pump_{dhw_nr}', None)
-                    out.pip(f'extra_dhw_boost_{dhw_nr}', None)
+                    out.pop(f'extra_dhw_boost_{dhw_nr}', None)
                 out.pop(key, None)
         if 'serial' not in out or not out['serial']:
             raise NoSerialException
