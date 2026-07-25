@@ -16,7 +16,6 @@ RESERVED = ['reserved', 'reservado', 'réservé', 'gereserveerd']
 SERIAL = 'Serial'
 
 TRANSLATE = {
-    #TODO: add translations for all languages, not just English and german
     "Running": "status",
     "Betrieb": "status",
     "Boiler temperature": "boiler_temperature",
@@ -323,7 +322,6 @@ TRANSLATE = {
     "temp.est": "outdoor_temperature",
     "caric.accum.": "buffer_load",
     "accum.in alto": "buffer_top_temperature",
-    "accu milieu": "buffer_center_temperature",
     "accum.in basso": "buffer_bottom_temperature",
     "pom.caric.cald.": "boiler_shunt_pump",
     "soffiante": "suction_fan",
@@ -685,72 +683,72 @@ TRANSLATE = {
 
 TRANSLATE_PROGRAM = {
     # english
-    "OFF": "off",
-    "TIMER": "timer",
-    "DHW": "dhw",
-    "HEAT": "heat",
-    "HIBERNAT": "hibernate",
-    "HIBERNATE TO": "hibernate_to",
-    "DHW BOOST": "dhw_boost",
+    "off": "off",
+    "timer": "timer",
+    "dhw": "dhw",
+    "heat": "heat",
+    "hibernat": "hibernate",
+    "hibernate to": "hibernate_to",
+    "dhw boost": "dhw_boost",
     # spanish
-    "ACS": "dhw",
-    "CALENTAR": "heat",
-    "Reducido": "hibernate",
-    "Reducido hasta": "hibernate_to",
-    "Impulsión ACS": "dhw_boost",
+    "acs": "dhw",
+    "calentar": "heat",
+    "reducido": "hibernate",
+    "reducido hasta": "hibernate_to",
+    "impulsión acs": "dhw_boost",
     # German
-    "Aus": "off",
-    "Normal": "timer",
-    "Warmwasser": "dhw",
-    "Heizen": "heat",
-    "Absenken": "hibernate",
-    "Absenken bis": "hibernate_to",
-    "WW-Nachladen": "dhw_boost",
+    "aus": "off",
+    "normal": "timer",
+    "warmwasser": "dhw",
+    "heizen": "heat",
+    "absenken": "hibernate",
+    "absenken bis": "hibernate_to",
+    "ww-nachladen": "dhw_boost",
     # french
-    "NORMAL": "timer",
-    "ECS": "dhw",
-    "CHAUFFAGE": "heat",
-    "DIMIN.": "hibernate",
-    "DIMIN.JUSQ.": "hibernate_to",
-    "Recharge ECS": "dhw_boost",
+    "ecs": "dhw",
+    "chauffage": "heat",
+    "dimin.": "hibernate",
+    "dimin.jusq.": "hibernate_to",
+    "recharge ecs": "dhw_boost",
     # italian
-    "NORMALE": 'timer',
-    "BOLLIT": 'dhw',
-    "RISC": 'heat',
-    'RIDUR': 'hibernate',
-    'RIDURRE FINO': 'hibernate_to',
-    'CARI.BOLLIT': 'dhw_boost',
+    "normale": 'timer',
+    "bollit": 'dhw',
+    "risc": 'heat',
+    'ridur': 'hibernate',
+    'ridurre fino': 'hibernate_to',
+    'cari.bollit': 'dhw_boost',
     # czech
-    "TUV": "dhw",
-    "TOPENI": "heat",
-    "UTLUM": "hibernate",
-    "UTLUM DO": "hibernate_to",
-    "TUV DOHREV": "dhw_boost",
+    "tuv": "dhw",
+    "topeni": "heat",
+    "utlum": "hibernate",
+    "utlum do": "hibernate_to",
+    "tuv dohrev": "dhw_boost",
     # Slovenian
-    "IZKLOP": "off",
-    "Topla voda": "dhw",
-    "Normalno": "timer",
-    "Gretje": "heat",
-    "Znizaj": "hibernate",
-    "Znizaj do": "hibernate_to",
-    "Ogrej vodo": "dhw_boost",
+    "izklop": "off",
+    "topla voda": "dhw",
+    "normalno": "timer",
+    "gretje": "heat",
+    "znizaj": "hibernate",
+    "znizaj do": "hibernate_to",
+    "ogrej vodo": "dhw_boost",
     # hungarian
-    "KI": "off",
-    "Normál": "timer",
-    "Meleg víz": "dhw",
-    "FÛTÉS": "heat",
-    "Csökkent": "hibernate",
-    "Csökkent -ig": "hibernate_to",
-    "HMV utántöltés": "dhw_boost",
+    "ki": "off",
+    "normál": "timer",
+    "meleg víz": "dhw",
+    "fûtés": "heat",
+    "csökkent": "hibernate",
+    "csökkent -ig": "hibernate_to",
+    "hmv utántöltés": "dhw_boost",
     # nederlands
-    "Uit": "off",
-    "Normaal": "timer",
-    "Warmwater": "dhw",
-    "Verwarmen": "heat",
+    "uit": "off",
+    "normaal": "timer",
+    "warmwater": "dhw",
+    "verwarmen": "heat",
     "reduceren": "hibernate",
-    "Reduceren tot": "hibernate_to",
-    "WW-Naloop": "dhw_boost",
+    "reduceren tot": "hibernate_to",
+    "ww-naloop": "dhw_boost",
 }
+
 
 class UnexpectedDataEncounteredException(Exception):
     """
@@ -758,10 +756,12 @@ class UnexpectedDataEncounteredException(Exception):
     This should not happen, please open a bug against guntamatic library on pypi
     """
 
+
 class NoSerialException(Exception):
     """
     Raised when no serial was present in the data
     """
+
 
 class Heater():
     """This class represents a heater"""
@@ -786,7 +786,7 @@ class Heater():
         logging.debug(data)
         desc = requests.get(self.protocol + self.host + '/' + self.descurl, timeout=10)
         logging.debug(desc)
-        desc= desc.text.split('\n')
+        desc = desc.text.split('\n')
         logging.debug(desc)
 
         returndata = {}
@@ -820,11 +820,14 @@ class Heater():
 
         # skip room temperature if it is 60: default value
         for key in list(out):
-            if 'temp' in key and (out[key] ==  ["60.00", "\u00b0C"]
-                                  or out[key] ==  ["-20.00", "\u00b0C"]
-                                  or out[key] == ["43.00", "\u00b0C"]
-                                  or out[key] == ["44.00", "\u00b0C"]
-                                  or out[key] ==  ["-9.00", "\u00b0C"]):
+            if 'temp' in key and (out[key] in [["60.00", "\u00b0C"],
+                                               ["-20.00", "\u00b0C"],
+                                               ["43.00", "\u00b0C"],
+                                               ["44.00", "\u00b0C"],
+                                               ["-9.00", "\u00b0C"],
+                                               ["120.00", "\u00b0C"],
+                                               ]
+                                  ):
                 if 'circuit' in key:
                     circuit_nr = key[8]
                     out.pop(f'heating_circulation_pump_{circuit_nr}', None)
@@ -838,7 +841,13 @@ class Heater():
             raise NoSerialException
         # Translate values as wel for known enums
         if 'program' in out:
-            out['program'][0] = TRANSLATE_PROGRAM[out['program'][0]]
+            try:
+                out['program'][0] = TRANSLATE_PROGRAM[out['program'][0].lower()]
+            except KeyError:
+                logging.warning('Untranslated string detected for %s, please open an issue on '
+                                'https://github.com/JensTimmerman/guntamatic/issues for this',
+                                out['program'][0])
+
         return out
 
 
