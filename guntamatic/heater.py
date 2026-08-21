@@ -749,6 +749,91 @@ TRANSLATE_PROGRAM = {
     "ww-naloop": "dhw_boost",
 }
 
+# Values for the heating circulation program (HK001, Program HCx)
+# as reported in daqdata.cgi, for all languages supported by the heater.
+# Discovered from the internal parameter file (par.cgi) in each language.
+TRANSLATE_HC_PROGRAM = {
+    # english
+    "off": "off",
+    "timer": "timer",
+    "heat": "heat",
+    "hibernat": "hibernate",
+    "hibernate to": "hibernate_to",
+    # spanish
+    "normal": "timer",
+    "calentar": "heat",
+    "reducido": "hibernate",
+    "reducido hasta": "hibernate_to",
+    # german
+    "aus": "off",
+    "heizen": "heat",
+    "absenken": "hibernate",
+    "absenken bis": "hibernate_to",
+    # french
+    "chauffage": "heat",
+    "dimin.": "hibernate",
+    "dimin.jusq.": "hibernate_to",
+    # italian
+    "normale": "timer",
+    "risc": "heat",
+    "ridur": "hibernate",
+    "ridurre fino": "hibernate_to",
+    # czech
+    "vypnuto": "off",
+    "topeni": "heat",
+    "utlum": "hibernate",
+    "utlum do": "hibernate_to",
+    # slovenian
+    "izklop": "off",
+    "normalno": "timer",
+    "gretje": "heat",
+    "znizaj": "hibernate",
+    "znizaj do": "hibernate_to",
+    # hungarian
+    "ki": "off",
+    "normál": "timer",
+    "fûtés": "heat",
+    "csökkent": "hibernate",
+    "csökkent -ig": "hibernate_to",
+    # dutch
+    "uit": "off",
+    "normaal": "timer",
+    "verwarmen": "heat",
+    "reduceren": "hibernate",
+    "reduceren tot": "hibernate_to",
+}
+
+# Operating mode values reported for pumps (heating_circulation_pump_x,
+# auxiliary_pump_x, extra_dhw_boost_x): AUTO, OFF, NONSTP in each language.
+TRANSLATE_PUMP_MODE = {
+    # english
+    "auto": "auto",
+    "off": "off",
+    "nonstp": "nonstop",
+    # spanish
+    "duración": "nonstop",
+    # german
+    "aus": "off",
+    "dauer": "nonstop",
+    # french
+    "duree": "nonstop",
+    # italian
+    "contin": "nonstop",
+    # czech
+    "vyp": "off",
+    "trvale": "nonstop",
+    # slovenian
+    "avto": "auto",
+    "izkklop": "off",  # typo present in slovenian firmware
+    "trajno": "nonstop",
+    # hungarian
+    "ki": "off",
+    "tartós": "nonstop",
+    # dutch
+    "uit": "off",
+    "continue": "nonstop",
+}
+
 
 class UnexpectedDataEncounteredException(Exception):
     """
@@ -847,6 +932,21 @@ class Heater():
                 logging.warning('Untranslated string detected for %s, please open an issue on '
                                 'https://github.com/JensTimmerman/guntamatic/issues for this',
                                 out['program'][0])
+        for key in list(out):
+            if key.startswith('heating_circulation_program_'):
+                translation = TRANSLATE_HC_PROGRAM
+            elif key.startswith(('heating_circulation_pump_',
+                                 'auxiliary_pump_',
+                                 'extra_dhw_boost_')):
+                translation = TRANSLATE_PUMP_MODE
+            else:
+                continue
+            try:
+                out[key][0] = translation[out[key][0].strip().lower()]
+            except KeyError:
+                logging.warning('Untranslated string detected for %s, please open an issue on '
+                                'https://github.com/JensTimmerman/guntamatic/issues for this',
+                                out[key][0])
 
         return out
 
