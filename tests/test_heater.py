@@ -108,3 +108,156 @@ def test_missing_dhw_pump_when_dhw_temp_60(heater: Heater) -> None:
         data = heater.parse_data()
 
     assert "dhw_pump_1" not in data
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        # english
+        ("OFF", "off"),
+        ("TIMER", "timer"),
+        ("HEAT", "heat"),
+        ("HIBERNAT", "hibernate"),
+        ("HIBERNATE TO", "hibernate_to"),
+        # spanish
+        ("normal", "timer"),
+        ("CALENTAR", "heat"),
+        ("Reducido hasta", "hibernate_to"),
+        # german
+        ("Aus", "off"),
+        ("Absenken bis", "hibernate_to"),
+        # french
+        ("DIMIN.", "hibernate"),
+        ("DIMIN.JUSQ.", "hibernate_to"),
+        # italian
+        ("NORMALE", "timer"),
+        ("RIDUR", "hibernate"),
+        # czech
+        ("VYPNUTO", "off"),
+        ("UTLUM DO", "hibernate_to"),
+        # slovenian
+        ("IZKLOP", "off"),
+        ("Znizaj do", "hibernate_to"),
+        # hungarian
+        ("KI", "off"),
+        ("Csökkent -ig", "hibernate_to"),
+        # dutch
+        ("Uit", "off"),
+        ("Reduceren tot", "hibernate_to"),
+    ],
+)
+def test_heating_circulation_program_translation(
+    heater: Heater, value: str, expected: str
+) -> None:
+    """Test heating circulation program values are translated from every language."""
+    mock_desc = "Serial;\nProgram HC0;\n"
+    mock_data = f"a\n{value}\n"
+
+    def mock_get(url: str, **kwargs) -> MagicMock:
+        mock = MagicMock()
+        if "daqdesc" in url:
+            mock.text = mock_desc
+        else:
+            mock.text = mock_data
+        return mock
+
+    with patch("guntamatic.heater.requests.get", side_effect=mock_get):
+        data = heater.parse_data()
+
+    assert data["heating_circulation_program_0"][0] == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        # english
+        ("AUTO", "auto"),
+        ("OFF", "off"),
+        ("NONSTP", "nonstop"),
+        # spanish
+        ("Auto", "auto"),
+        ("Off", "off"),
+        ("DURACIÓN", "nonstop"),
+        # german
+        ("AUS", "off"),
+        ("DAUER", "nonstop"),
+        # french
+        ("DUREE", "nonstop"),
+        # italian
+        ("CONTIN", "nonstop"),
+        # czech
+        ("VYP", "off"),
+        ("TRVALE", "nonstop"),
+        # slovenian
+        ("AVTO", "auto"),
+        ("IZKKLOP", "off"),  # typo present in slovenian firmware
+        ("TRAJNO", "nonstop"),
+        # hungarian
+        ("KI", "off"),
+        ("TARTÓS", "nonstop"),
+        # dutch
+        ("uit", "off"),
+        ("Continue", "nonstop"),
+    ],
+)
+def test_pump_mode_translation(heater: Heater, value: str, expected: str) -> None:
+    """Test pump operating mode values are translated from every language."""
+    for key, translated_key in (
+        ("Heating circulation pump 0", "heating_circulation_pump_0"),
+        ("Auxiliary pump 0", "auxiliary_pump_0"),
+    ):
+        mock_desc = f"Serial;\n{key};\n"
+        mock_data = f"a\n{value}\n"
+
+        def mock_get(url: str, mock_desc=mock_desc, mock_data=mock_data, **kwargs) -> MagicMock:
+            mock = MagicMock()
+            if "daqdesc" in url:
+                mock.text = mock_desc
+            else:
+                mock.text = mock_data
+            return mock
+
+        with patch("guntamatic.heater.requests.get", side_effect=mock_get):
+            data = heater.parse_data()
+
+        assert data[translated_key][0] == expected
+
+
+def test_unknown_enum_value_passes_through(heater: Heater) -> None:
+    """Test that unknown enum values are passed through untranslated."""
+    mock_desc = "Serial;\nProgram HC0;\nHeating circulation pump 0;\n"
+    mock_data = "a\nNONSENSE\nALSO NONSENSE\n"
+
+    def mock_get(url: str, **kwargs) -> MagicMock:
+        mock = MagicMock()
+        if "daqdesc" in url:
+            mock.text = mock_desc
+        else:
+            mock.text = mock_data
+        return mock
+
+    with patch("guntamatic.heater.requests.get", side_effect=mock_get):
+        data = heater.parse_data()
+
+    assert data["heating_circulation_program_0"][0] == "NONSENSE"
+    assert data["heating_circulation_pump_0"][0] == "ALSO NONSENSE"
+
+
+def test_percent_pumps_are_not_translated(heater: Heater) -> None:
+    """Test that modulating pumps reported as percentages are left alone."""
+    mock_desc = "Serial;\nDHW Pump 0;%\nBoil.shunt pump;%\n"
+    mock_data = "a\n55.00\n12.00\n"
+
+    def mock_get(url: str, **kwargs) -> MagicMock:
+        mock = MagicMock()
+        if "daqdesc" in url:
+            mock.text = mock_desc
+        else:
+            mock.text = mock_data
+        return mock
+
+    with patch("guntamatic.heater.requests.get", side_effect=mock_get):
+        data = heater.parse_data()
+
+    assert data["dhw_pump_0"] == ["55.00", "%"]
+    assert data["boiler_shunt_pump"] == ["12.00", "%"]
