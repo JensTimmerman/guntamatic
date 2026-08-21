@@ -261,3 +261,45 @@ def test_percent_pumps_are_not_translated(heater: Heater) -> None:
 
     assert data["dhw_pump_0"] == ["55.00", "%"]
     assert data["boiler_shunt_pump"] == ["12.00", "%"]
+
+
+def parse_with(heater: Heater, desc: str, data: str) -> dict:
+    """Run parse_data against mocked desc/data payloads."""
+    def mock_get(url: str, **kwargs) -> MagicMock:
+        mock = MagicMock()
+        if "daqdesc" in url:
+            mock.text = desc
+        else:
+            mock.text = data
+        return mock
+
+    with patch("guntamatic.heater.requests.get", side_effect=mock_get):
+        return heater.parse_data()
+
+
+def test_service_time_reported_in_days(heater: Heater) -> None:
+    """Test service time in days is exposed as both days and hours."""
+    data = parse_with(heater, "Serial;\nService Hrs;d\n", "a\n2012\n")
+    assert data["service_days"] == ["2012", "d"]
+    assert data["service_hours"] == ["48288", "h"]
+
+
+def test_service_time_reported_in_hours(heater: Heater) -> None:
+    """Test service time in hours is exposed as both hours and days."""
+    data = parse_with(heater, "Serial;\nService Hrs;h\n", "a\n48\n")
+    assert data["service_hours"] == ["48", "h"]
+    assert data["service_days"] == ["2", "d"]
+
+
+def test_service_time_unknown_unit_untouched(heater: Heater) -> None:
+    """Test that an unrecognized unit is passed through without normalization."""
+    data = parse_with(heater, "Serial;\nService Hrs;x\n", "a\n7\n")
+    assert data["service_hours"] == ["7", "x"]
+    assert "service_days" not in data
+
+
+def test_service_time_non_numeric_untouched(heater: Heater) -> None:
+    """Test that non-numeric service time values are left alone."""
+    data = parse_with(heater, "Serial;\nService Hrs;d\n", "a\nN/A\n")
+    assert data["service_hours"] == ["N/A", "d"]
+    assert "service_days" not in data

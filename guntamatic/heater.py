@@ -948,6 +948,22 @@ class Heater():
                                 'https://github.com/JensTimmerman/guntamatic/issues for this',
                                 out[key][0])
 
+        # The heater reports the time until/before service either in days or in
+        # hours depending on model/firmware. Normalize into both views so
+        # consumers can rely on stable units.
+        if 'service_hours' in out:
+            value = out['service_hours'][0]
+            unit = str(out['service_hours'][1]).strip().lower()
+            try:
+                amount = float(str(value).replace(',', '.'))
+            except ValueError:
+                amount = None
+            if amount is not None and unit.startswith(('d', 'h')):
+                days = amount if unit.startswith('d') else amount / 24
+                hours = amount if unit.startswith('h') else amount * 24
+                out['service_days'] = [f"{days:g}", "d"]
+                out['service_hours'] = [f"{hours:g}", "h"]
+
         return out
 
 
