@@ -322,7 +322,7 @@ def circuit_slot_parse(heater: Heater, room: str, flow: str) -> dict:
         return heater.parse_data()
 
 
-@pytest.mark.parametrize("placeholder", ["49.0", "49.00", "-20.00", "60.00"])
+@pytest.mark.parametrize("placeholder", ["-20.0", "-20.00"])
 def test_placeholder_flow_hides_circuit(heater: Heater, placeholder: str) -> None:
     """Test a placeholder flow temperature filters the whole circuit slot."""
     data = circuit_slot_parse(heater, "21.50", placeholder)
@@ -332,7 +332,7 @@ def test_placeholder_flow_hides_circuit(heater: Heater, placeholder: str) -> Non
     assert data["room_1_temperature"] == ["21.50", "°C"]
 
 
-@pytest.mark.parametrize("placeholder", ["49.0", "60.00"])
+@pytest.mark.parametrize("placeholder", ["-9.0", "-9.00", "60.00"])
 def test_placeholder_room_hides_circuit(heater: Heater, placeholder: str) -> None:
     """Test a placeholder room temperature filters the whole circuit slot."""
     data = circuit_slot_parse(heater, placeholder, "55.00")
@@ -358,7 +358,7 @@ def test_default_dhw_hides_dhw_slot(heater: Heater) -> None:
         if "daqdesc" in url:
             mock.text = "Serial;\nDHW 0;°C\nDHW Pump 0;%\n"
         else:
-            mock.text = "a\n60.00\n0\n"
+            mock.text = "a\n-20.00\n0\n"
         return mock
 
     with patch("guntamatic.heater.requests.get", side_effect=mock_get):
@@ -417,3 +417,45 @@ def test_default_buffer_stage_is_filtered(heater: Heater) -> None:
 
     assert "buffer_top_0_temperature" not in data
     assert data["buffer_top_1_temperature"] == ["55.00", "\u00b0C"]
+
+
+@pytest.mark.parametrize("boiler_temp", ["43.00", "44.00", "49.00"])
+def test_boiler_temperature_is_never_filtered(
+    heater: Heater, boiler_temp: str
+) -> None:
+    """Test boiler temperatures are kept even when matching placeholder values."""
+    def mock_get(url: str, **kwargs) -> MagicMock:
+        mock = MagicMock()
+        if "daqdesc" in url:
+            mock.text = "Serial;\nBoiler temperature;\u00b0C\n"
+        else:
+            mock.text = f"a\n{boiler_temp}\n"
+        return mock
+
+    with patch("guntamatic.heater.requests.get", side_effect=mock_get):
+        data = heater.parse_data()
+
+    assert data["boiler_temperature"] == [boiler_temp, "\u00b0C"]
+
+
+def test_default_extra_dhw_temperature_is_filtered(heater: Heater) -> None:
+    """Test extra DHW temperatures at the placeholder value are filtered."""
+    def mock_get(url: str, **kwargs) -> MagicMock:
+        mock = MagicMock()
+        if "daqdesc" in url:
+            mock.text = "Serial;\nDHW 1;\u00b0C\nextra-WW. 1;\u00b0C\n"
+        else:
+            mock.text = "a\n-20.00\n-20.00\n"
+        return mock
+
+    with patch("guntamatic.heater.requests.get", side_effect=mock_get):
+        data = heater.parse_data()
+
+    assert "extra_dhw_1_temperature" not in data
+    assert "domestic_hot_water_1_temperature" not in data  # dhw temp itself is also the placeholder
+
+
+def test_flow_tracking_process_temperature_is_kept(heater: Heater) -> None:
+    """Test an unused circuit's flow temp near process heat is kept when the room sensor is real."""
+    data = circuit_slot_parse(heater, "21.50", "48.00")
+    assert data["circuit_1_temp"] == ["48.00", "\u00b0C"]

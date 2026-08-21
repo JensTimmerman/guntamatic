@@ -5,6 +5,51 @@ The Guntamatic class can be used by IOT frameworks to be called regularly and pl
 The exact outputs might depend on your model and firmware.
 
 
+## How parse_data works
+
+`parse_data()` post-processes the raw device output in three steps:
+
+**1. Stable keys.** Field labels are translated from the language configured
+on the heater to fixed English snake_case keys, so you always get the same
+keys (`boiler_temperature`, `room_1_temperature`, ...) regardless of the
+language set on the heater's display.
+
+**2. Canonical enum values.** Known enum values are translated from the
+heater's language to canonical English values:
+
+- `program`: `off`, `timer`, `dhw`, `heat`, `hibernate`, `hibernate_to`,
+  `dhw_boost`
+- heating circuit programs (`heating_circulation_program_x`): `off`, `timer`,
+  `heat`, `hibernate`, `hibernate_to`
+- pump operating modes (`heating_circulation_pump_x`, `auxiliary_pump_x`,
+  `extra_dhw_boost_x`): `auto`, `off`, `nonstop`
+
+Values that are not recognized are passed through unchanged and logged as a
+warning.
+
+**3. Placeholder filtering.** Unconfigured slots (e.g. heating circuits that
+are not connected) report placeholder temperatures instead of real data.
+`parse_data()` removes those sensors together with the diagnostics belonging
+to the same slot:
+
+- a placeholder **room temperature** (-9 or 60 °C) hides the entire circuit
+  slot: flow temperature, circulation pump and program
+- a placeholder **flow temperature** (-20 °C) hides the flow temperature,
+  pump and program of that circuit
+- a default **DHW temperature** (-20 °C) hides the DHW temperature and its
+  pump and boost sensors
+- absent **buffer stages** are filtered at -20 and 120 °C
+
+Note: the flow temperature reported for an unused circuit is *not* a stable
+placeholder — it tracks process temperatures. Circuits are therefore
+considered unconfigured based on their room temperature placeholder.
+
+**4. Service time normalization.** Models report the time before/between
+service either in hours or in days depending on firmware. `parse_data()`
+always exposes both: `service_days` (`[value, 'd']`) and `service_hours`
+(`[value * 24, 'h']`).
+
+
 ## release history
 - 1.0.1: don't generate an empty sensor as last line, skip empty lines
 - 1.0.2: update homepage
@@ -16,6 +61,13 @@ The exact outputs might depend on your model and firmware.
 - 1.5.0: Translate known values to snake_case as well
 - 1.6.0: Add more sensors to get_data, rename domestic home water to domestic hot water
 - 1.7.0: Added support for devices in german, french, italian and spanish with mapping to fixed english output, removed supurflious print
+- 1.7.1: fix typo
+- 1.8.0: more heater language translations (czech, slovenian, hungarian, dutch)
+- 1.9.0: filter more placeholder temperatures; use pop with default to avoid KeyErrors on incomplete data
+- 1.9.1 - 1.9.3: robustness fixes for incomplete data and looser label matching
+- 1.10.0: translate heating circulation programs and pump operating modes to canonical english values in all supported heater languages; reference parameter dumps per language in doc/params/
+- 1.11.0: expose the service time normalized as both service_days and service_hours
+- 1.11.1: compare placeholder temperatures numerically (49 °C unconnected flows), cascade placeholder filtering from room temperature to the whole circuit slot, never filter realistic boiler/buffer readings
 
 ## tests
 PYTHONPATH=. pytest tests/test_heater.py
@@ -117,3 +169,5 @@ The following sensors are available for a Guntamatic BMK 20 heater:
 | Auxiliary pump 2 | OFF | |
 
 > Note: Sensors with a value of `-20.00 °C` are typically not connected.
+> `parse_data()` filters these placeholder slots automatically; the raw data
+> from `get_data()` still contains them.
