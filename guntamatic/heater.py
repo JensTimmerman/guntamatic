@@ -837,7 +837,7 @@ TRANSLATE_PUMP_MODE = {
 
 # Placeholder temperatures reported for unconfigured sensors. Compared
 # numerically, as the number of decimals differs between firmwares.
-DEFAULT_TEMPERATURES = {-20.0, -9.0, 43.0, 44.0, 49.0, 60.0, 120.0}
+DEFAULT_TEMPERATURES = {-20.0, -9.0, 43.0, 44.0, 49.0, 60.0}
 
 # Placeholder temperatures reported by absent buffer stages.
 BUFFER_PLACEHOLDER_TEMPERATURES = {-20.0, 120.0}
@@ -885,8 +885,12 @@ def _remove_placeholder_slots(data: dict[str, list]) -> None:
         dhw_key = f"domestic_hot_water_{nr}_temperature"
         if _is_default_temperature(data.get(dhw_key)):
             data.pop(dhw_key, None)
-            data.pop(f"dhw_pump_{nr}", None)
-            data.pop(f"extra_dhw_boost_{nr}", None)
+            for key in (
+                f"extra_dhw_{nr}_temperature",
+                f"dhw_pump_{nr}",
+                f"extra_dhw_boost_{nr}",
+            ):
+                data.pop(key, None)
     for nr in range(3):
         for key in (f"buffer_top_{nr}_temperature", f"buffer_bottom_{nr}_temperature"):
             entry = data.get(key)

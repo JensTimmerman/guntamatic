@@ -436,3 +436,20 @@ def test_boiler_temperature_is_never_filtered(
         data = heater.parse_data()
 
     assert data["boiler_temperature"] == [boiler_temp, "\u00b0C"]
+
+
+def test_default_extra_dhw_temperature_is_filtered(heater: Heater) -> None:
+    """Test extra DHW temperatures at the placeholder value are filtered."""
+    def mock_get(url: str, **kwargs) -> MagicMock:
+        mock = MagicMock()
+        if "daqdesc" in url:
+            mock.text = "Serial;\nDHW 1;\u00b0C\nextra-WW. 1;\u00b0C\n"
+        else:
+            mock.text = "a\n-20.00\n-20.00\n"
+        return mock
+
+    with patch("guntamatic.heater.requests.get", side_effect=mock_get):
+        data = heater.parse_data()
+
+    assert "extra_dhw_1_temperature" not in data
+    assert "domestic_hot_water_1_temperature" not in data  # dhw temp itself is also the placeholder
