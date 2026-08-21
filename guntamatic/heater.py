@@ -839,6 +839,9 @@ TRANSLATE_PUMP_MODE = {
 # numerically, as the number of decimals differs between firmwares.
 DEFAULT_TEMPERATURES = {-20.0, -9.0, 43.0, 44.0, 49.0, 60.0, 120.0}
 
+# Placeholder temperatures reported by absent buffer stages.
+BUFFER_PLACEHOLDER_TEMPERATURES = {-20.0, 120.0}
+
 
 def _is_default_temperature(entry: list) -> bool:
     """Return whether a sensor entry holds a placeholder temperature."""
@@ -857,13 +860,51 @@ class UnexpectedDataEncounteredException(Exception):
     """
 
 
+def _remove_placeholder_slots(data: dict[str, list]) -> None:
+    """Remove sensors of slots that report a placeholder temperature.
+
+    A placeholder room temperature hides the entire circuit slot; a
+    placeholder flow temperature only hides the flow temperature, pump and
+    program. A default DHW temperature hides the DHW temperature and pump.
+    """
+    for nr in range(10):
+        room_key = f"room_{nr}_temperature"
+        flow_key = f"circuit_{nr}_temp"
+        pump_key = f"heating_circulation_pump_{nr}"
+        program_key = f"heating_circulation_program_{nr}"
+        if _is_default_temperature(data.get(room_key)):
+            data.pop(room_key, None)
+            related = (flow_key, pump_key, program_key)
+        elif _is_default_temperature(data.get(flow_key)):
+            related = (flow_key, pump_key, program_key)
+        else:
+            continue
+        for key in related:
+            data.pop(key, None)
+    for nr in range(3):
+        dhw_key = f"domestic_hot_water_{nr}_temperature"
+        if _is_default_temperature(data.get(dhw_key)):
+            data.pop(dhw_key, None)
+            data.pop(f"dhw_pump_{nr}", None)
+            data.pop(f"extra_dhw_boost_{nr}", None)
+    for nr in range(3):
+        for key in (f"buffer_top_{nr}_temperature", f"buffer_bottom_{nr}_temperature"):
+            entry = data.get(key)
+            if entry and entry[1] == "\u00b0C":
+                try:
+                    if float(entry[0]) in BUFFER_PLACEHOLDER_TEMPERATURES:
+                        data.pop(key, None)
+                except ValueError:
+                    pass
+
+
 class NoSerialException(Exception):
     """
     Raised when no serial was present in the data
     """
 
 
-class Heater():
+class Heater:
     """This class represents a heater"""
 
     def __init__(self, host):
@@ -918,43 +959,8 @@ class Heater():
             except KeyError:
                 pass
 
-        # Unconfigured slots report placeholder temperatures. A placeholder
-        # room temperature hides the entire circuit slot; a placeholder flow
-        # temperature only hides the flow temperature, pump and program.
-        for nr in range(10):
-            room_key = f"room_{nr}_temperature"
-            flow_key = f"circuit_{nr}_temp"
-            pump_key = f"heating_circulation_pump_{nr}"
-            program_key = f"heating_circulation_program_{nr}"
-            if _is_default_temperature(out.get(room_key)):
-                out.pop(room_key, None)
-            else:
-                continue
-            for key in (flow_key, pump_key, program_key):
-                out.pop(key, None)
-        for nr in range(10):
-            flow_key = f"circuit_{nr}_temp"
-            if not _is_default_temperature(out.get(flow_key)):
-                continue
-            out.pop(flow_key, None)
-            out.pop(f"heating_circulation_pump_{nr}", None)
-            out.pop(f"heating_circulation_program_{nr}", None)
-        for nr in range(3):
-            dhw_key = f"domestic_hot_water_{nr}_temperature"
-            if not _is_default_temperature(out.get(dhw_key)):
-                continue
-            out.pop(dhw_key, None)
-            out.pop(f"dhw_pump_{nr}", None)
-            out.pop(f"extra_dhw_boost_{nr}", None)
-        for nr in range(3):
-            for key in (f"buffer_top_{nr}_temperature", f"buffer_bottom_{nr}_temperature"):
-                entry = out.get(key)
-                if entry and entry[1] == "\u00b0C":
-                    try:
-                        if float(entry[0]) in {-20.0, 120.0}:
-                            out.pop(key, None)
-                    except ValueError:
-                        pass
+        # Unconfigured slots report placeholder temperatures.
+        _remove_placeholder_slots(out)
         if 'serial' not in out or not out['serial']:
             raise NoSerialException
         # Translate values as wel for known enums
