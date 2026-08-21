@@ -417,3 +417,22 @@ def test_default_buffer_stage_is_filtered(heater: Heater) -> None:
 
     assert "buffer_top_0_temperature" not in data
     assert data["buffer_top_1_temperature"] == ["55.00", "\u00b0C"]
+
+
+@pytest.mark.parametrize("boiler_temp", ["43.00", "44.00", "49.00"])
+def test_boiler_temperature_is_never_filtered(
+    heater: Heater, boiler_temp: str
+) -> None:
+    """Test boiler temperatures are kept even when matching placeholder values."""
+    def mock_get(url: str, **kwargs) -> MagicMock:
+        mock = MagicMock()
+        if "daqdesc" in url:
+            mock.text = "Serial;\nBoiler temperature;\u00b0C\n"
+        else:
+            mock.text = f"a\n{boiler_temp}\n"
+        return mock
+
+    with patch("guntamatic.heater.requests.get", side_effect=mock_get):
+        data = heater.parse_data()
+
+    assert data["boiler_temperature"] == [boiler_temp, "\u00b0C"]
