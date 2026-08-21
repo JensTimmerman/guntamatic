@@ -835,20 +835,37 @@ TRANSLATE_PUMP_MODE = {
 }
 
 
-# Placeholder temperatures reported for unconfigured sensors. Compared
-# numerically, as the number of decimals differs between firmwares.
-DEFAULT_TEMPERATURES = {-20.0, -9.0, 43.0, 44.0, 49.0, 60.0}
+# Placeholder temperatures reported for unconfigured slots, per key
+# template. Compared numerically, as the number of decimals differs between
+# firmwares.
+#
+# The flow temperature of an unused circuit is NOT a stable value: it tracks
+# process temperatures (observed 43-49 °C). Only its negative reset value is
+# treated as a placeholder; unconnected circuits are filtered through their
+# room temperature placeholder instead.
+PLACEHOLDER_TEMPERATURES: dict[str, set[float]] = {
+    "room_{nr}_temperature": {-9.0, 60.0},
+    "circuit_{nr}_temp": {-20.0},
+    "domestic_hot_water_{nr}_temperature": {-20.0},
+    "extra_dhw_{nr}_temperature": {-20.0},
+    "buffer_top_{nr}_temperature": {-20.0, 120.0},
+    "buffer_bottom_{nr}_temperature": {-20.0, 120.0},
+}
 
-# Placeholder temperatures reported by absent buffer stages.
-BUFFER_PLACEHOLDER_TEMPERATURES = {-20.0, 120.0}
+PLACEHOLDERS_BY_KEY: dict[str, frozenset[float]] = {
+    template.format(nr=nr): frozenset(temperatures)
+    for template, temperatures in PLACEHOLDER_TEMPERATURES.items()
+    for nr in range(10)
+}
 
 
-def _is_default_temperature(entry: list) -> bool:
-    """Return whether a sensor entry holds a placeholder temperature."""
-    if not entry or len(entry) < 2 or entry[1] != "\u00b0C":
+def _is_placeholder_temperature(key: str, entry: list | None) -> bool:
+    """Return whether a sensor entry holds its slot's placeholder temperature."""
+    placeholders = PLACEHOLDERS_BY_KEY.get(key)
+    if not entry or len(entry) < 2 or entry[1] != "\u00b0C" or placeholders is None:
         return False
     try:
-        return float(entry[0]) in DEFAULT_TEMPERATURES
+        return float(entry[0]) in placeholders
     except ValueError:
         return False
 
@@ -872,10 +889,10 @@ def _remove_placeholder_slots(data: dict[str, list]) -> None:
         flow_key = f"circuit_{nr}_temp"
         pump_key = f"heating_circulation_pump_{nr}"
         program_key = f"heating_circulation_program_{nr}"
-        if _is_default_temperature(data.get(room_key)):
+        if _is_placeholder_temperature(room_key, data.get(room_key)):
             data.pop(room_key, None)
             related = (flow_key, pump_key, program_key)
-        elif _is_default_temperature(data.get(flow_key)):
+        elif _is_placeholder_temperature(flow_key, data.get(flow_key)):
             related = (flow_key, pump_key, program_key)
         else:
             continue
@@ -883,7 +900,7 @@ def _remove_placeholder_slots(data: dict[str, list]) -> None:
             data.pop(key, None)
     for nr in range(3):
         dhw_key = f"domestic_hot_water_{nr}_temperature"
-        if _is_default_temperature(data.get(dhw_key)):
+        if _is_placeholder_temperature(dhw_key, data.get(dhw_key)):
             data.pop(dhw_key, None)
             for key in (
                 f"extra_dhw_{nr}_temperature",
@@ -896,7 +913,7 @@ def _remove_placeholder_slots(data: dict[str, list]) -> None:
             entry = data.get(key)
             if entry and entry[1] == "\u00b0C":
                 try:
-                    if float(entry[0]) in BUFFER_PLACEHOLDER_TEMPERATURES:
+                    if _is_placeholder_temperature(key, data.get(key)):
                         data.pop(key, None)
                 except ValueError:
                     pass
