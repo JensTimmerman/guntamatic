@@ -835,6 +835,21 @@ TRANSLATE_PUMP_MODE = {
 }
 
 
+# Placeholder temperatures reported for unconfigured sensors. Compared
+# numerically, as the number of decimals differs between firmwares.
+DEFAULT_TEMPERATURES = {-20.0, -9.0, 43.0, 44.0, 49.0, 60.0, 120.0}
+
+
+def _is_default_temperature(entry: list) -> bool:
+    """Return whether a sensor entry holds a placeholder temperature."""
+    if not entry or len(entry) < 2 or entry[1] != "\u00b0C":
+        return False
+    try:
+        return float(entry[0]) in DEFAULT_TEMPERATURES
+    except ValueError:
+        return False
+
+
 class UnexpectedDataEncounteredException(Exception):
     """
     Raised when unexpected data is encountered
@@ -903,25 +918,43 @@ class Heater():
             except KeyError:
                 pass
 
-        # skip room temperature if it is 60: default value
-        for key in list(out):
-            if 'temp' in key and (out[key] in [["60.00", "\u00b0C"],
-                                               ["-20.00", "\u00b0C"],
-                                               ["43.00", "\u00b0C"],
-                                               ["44.00", "\u00b0C"],
-                                               ["-9.00", "\u00b0C"],
-                                               ["120.00", "\u00b0C"],
-                                               ]
-                                  ):
-                if 'circuit' in key:
-                    circuit_nr = key[8]
-                    out.pop(f'heating_circulation_pump_{circuit_nr}', None)
-                    out.pop(f'heating_circulation_program_{circuit_nr}', None)
-                if 'domestic_hot_water' in key:
-                    dhw_nr = key[19]
-                    out.pop(f'dhw_pump_{dhw_nr}', None)
-                    out.pop(f'extra_dhw_boost_{dhw_nr}', None)
+        # Unconfigured slots report placeholder temperatures. A placeholder
+        # room temperature hides the entire circuit slot; a placeholder flow
+        # temperature only hides the flow temperature, pump and program.
+        for nr in range(10):
+            room_key = f"room_{nr}_temperature"
+            flow_key = f"circuit_{nr}_temp"
+            pump_key = f"heating_circulation_pump_{nr}"
+            program_key = f"heating_circulation_program_{nr}"
+            if _is_default_temperature(out.get(room_key)):
+                out.pop(room_key, None)
+            else:
+                continue
+            for key in (flow_key, pump_key, program_key):
                 out.pop(key, None)
+        for nr in range(10):
+            flow_key = f"circuit_{nr}_temp"
+            if not _is_default_temperature(out.get(flow_key)):
+                continue
+            out.pop(flow_key, None)
+            out.pop(f"heating_circulation_pump_{nr}", None)
+            out.pop(f"heating_circulation_program_{nr}", None)
+        for nr in range(3):
+            dhw_key = f"domestic_hot_water_{nr}_temperature"
+            if not _is_default_temperature(out.get(dhw_key)):
+                continue
+            out.pop(dhw_key, None)
+            out.pop(f"dhw_pump_{nr}", None)
+            out.pop(f"extra_dhw_boost_{nr}", None)
+        for nr in range(3):
+            for key in (f"buffer_top_{nr}_temperature", f"buffer_bottom_{nr}_temperature"):
+                entry = out.get(key)
+                if entry and entry[1] == "\u00b0C":
+                    try:
+                        if float(entry[0]) in {-20.0, 120.0}:
+                            out.pop(key, None)
+                    except ValueError:
+                        pass
         if 'serial' not in out or not out['serial']:
             raise NoSerialException
         # Translate values as wel for known enums
