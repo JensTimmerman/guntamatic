@@ -68,6 +68,7 @@ always exposes both: `service_days` (`[value, 'd']`) and `service_hours`
 - 1.10.0: translate heating circulation programs and pump operating modes to canonical english values in all supported heater languages; reference parameter dumps per language in doc/params/
 - 1.11.0: expose the service time normalized as both service_days and service_hours
 - 1.11.1: compare placeholder temperatures numerically (49 °C unconnected flows), cascade placeholder filtering from room temperature to the whole circuit slot, never filter realistic boiler/buffer readings
+- 1.12.0: firmware 3.3 label support — renamed heating circuit pumps, DHW pumps and room/flow temperatures, reindexed interruptions and extra DHW slots, swedish field labels; new sensors: buffer T5/T6/T7, grate, ash emptying countdown, G1 target, output
 
 ## tests
 PYTHONPATH=. pytest tests/test_heater.py
