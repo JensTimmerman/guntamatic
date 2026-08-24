@@ -172,3 +172,8 @@ The following sensors are available for a Guntamatic BMK 20 heater:
 > Note: Sensors with a value of `-20.00 °C` are typically not connected.
 > `parse_data()` filters these placeholder slots automatically; the raw data
 > from `get_data()` still contains them.
+
+`interruption_1`/`interruption_2` ("Interuption 1/2") carry localized fault
+message texts following the language set on the heater. See
+[doc/fault_codes.md](doc/fault_codes.md) for the known Biostar (BS controller)
+fault messages from the official manuals.
